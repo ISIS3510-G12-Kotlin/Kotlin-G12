@@ -27,21 +27,6 @@
         android:theme="@style/Theme.ExplorAndes"
         tools:targetApi="31">
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        <!-- Splash Activity (Now the Launcher Activity) -->
-=======
-=======
->>>>>>> Stashed changes
-        <!-- Add Google Maps API key -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyA8JC9Rq6DveYWY4ylpomY5UOcxrd2qqak" />
-
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -60,7 +45,4 @@
             android:theme="@style/Theme.ExplorAndes"/>
 
     </application>
-
-
-
 </manifest>
