@@ -20,13 +20,42 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
+import com.example.explorandes.services.BrightnessController
+import com.example.explorandes.services.LightSensorManager
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var lightSensorManager: LightSensorManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+         // Initialize light sensor
+        lightSensorManager = LightSensorManager(this) { lux ->
+            adjustBrightness(lux)
+        }
+
+        lightSensorManager.startListening()
+        
         setContent {
             AppNavigator()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        lightSensorManager.stopListening()
+    }
+
+    private fun adjustBrightness(lux: Float) {
+        val brightnessLevel = when {
+            lux < 20 -> 1.0f  // Increase brightness in low light
+            lux < 100 -> 0.7f
+            lux < 500 -> 0.5f
+            else -> 0.3f  // Reduce brightness in bright light
+        }
+
+        BrightnessController.setBrightness(this, brightnessLevel)
     }
 }
 
