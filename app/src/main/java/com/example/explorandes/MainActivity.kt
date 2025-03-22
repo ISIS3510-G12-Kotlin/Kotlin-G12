@@ -227,9 +227,16 @@ fun LoginScreen(navController: NavHostController) {
                         }
                     }
                 },
+
+
+
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE91E63))
             ) {
+
+
+
+
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
@@ -240,11 +247,21 @@ fun LoginScreen(navController: NavHostController) {
                 }
             }
 
+
+
+
+
+
+
+
+
             // Skip login button for development
+
             Spacer(modifier = Modifier.height(8.dp))
             TextButton(
                 onClick = {
                     // Launch HomeActivity
+
                     val intent = Intent(context, HomeActivity::class.java)
                     context.startActivity(intent)
                     // Finish current activity if needed
