@@ -48,6 +48,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun setupCategoryIcons() {
         // Find all category views
+        // Furthermore, it helps to list the different category items
         val categoryBuildings = findViewById<View>(R.id.category_buildings)
         val categoryEvents = findViewById<View>(R.id.category_events)
         val categoryFood = findViewById<View>(R.id.category_food)
@@ -114,6 +115,7 @@ class HomeActivity : AppCompatActivity() {
         recommendationsRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         // Create sample data for recommendations
+        //
         val recommendations = listOf(
             Recommendation("1", "Medium", "Anestesia Alberto López", R.drawable.profile_placeholder, RecommendationType.PODCAST),
             Recommendation("2", "CHOBA", "Audición Alberto López", R.drawable.profile_placeholder, RecommendationType.DOCUMENTARY),

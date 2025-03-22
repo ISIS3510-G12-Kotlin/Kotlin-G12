@@ -78,7 +78,7 @@ fun AppNavigator() {
         }
     }
 }
-
+// Screen with transition
 @Composable
 fun SplashScreen() {
     Box(
@@ -95,7 +95,7 @@ fun SplashScreen() {
         }
     }
 }
-
+// Principal Screen
 @Composable
 fun HomeScreen(navController: NavHostController) {
     Box(
