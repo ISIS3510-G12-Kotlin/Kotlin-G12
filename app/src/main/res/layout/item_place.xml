@@ -51,14 +51,28 @@
             tools:text="Floor: ML_604" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_navigate"
+            android:id="@+id/btn_favorite"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/navigate"
+            android:text="@string/favorite"
             android:textColor="@color/colorPrimary"
-            app:icon="@drawable/ic_navigate"
+            app:icon="@drawable/ic_favorite"
+            app:iconTint="@color/colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btn_events"
+            app:layout_constraintTop_toBottomOf="@+id/place_location" />
+            
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_events"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/events"
+            android:textColor="@color/colorPrimary"
+            app:icon="@drawable/ic_event"
             app:iconTint="@color/colorPrimary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

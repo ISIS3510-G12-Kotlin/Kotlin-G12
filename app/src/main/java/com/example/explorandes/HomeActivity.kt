@@ -1,12 +1,18 @@
 package com.example.explorandes
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
@@ -63,6 +69,20 @@ class HomeActivity : AppCompatActivity() {
 
         // Initialize UI
         initializeUI()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        
+        // Make sure the correct tab is selected when returning to this activity
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
+        
+        if (currentFragment is AccountFragment) {
+            bottomNavigation.selectedItemId = R.id.navigation_account
+        } else if (findViewById<View>(R.id.nestedScrollView).visibility == View.VISIBLE) {
+            bottomNavigation.selectedItemId = R.id.navigation_home
+        }
     }
 
     private fun setupViewModelObservers() {
@@ -220,7 +240,8 @@ class HomeActivity : AppCompatActivity() {
                 R.id.navigation_navigate -> {
                     val intent = Intent(this, MapActivity::class.java)
                     startActivity(intent)
-                    true
+                    // Return false to prevent the item from being selected when returning from MapActivity
+                    false
                 }
                 R.id.navigation_notifications -> {
                     Toast.makeText(this, getString(R.string.notifications), Toast.LENGTH_SHORT).show()
@@ -245,6 +266,43 @@ class HomeActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.see_all_recommendations).setOnClickListener {
             Toast.makeText(this, "See all recommendations", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Setup search functionality
+        val searchInput = findViewById<EditText>(R.id.search_input)
+        searchInput.setOnEditorActionListener { textView, actionId, keyEvent ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER && keyEvent.action == KeyEvent.ACTION_DOWN
+            ) {
+                val query = textView.text.toString().trim()
+                if (query.isNotEmpty()) {
+                    viewModel.searchBuildings(query)
+                    // Hide keyboard
+                    val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(textView.windowToken, 0)
+                }
+                true
+            } else {
+                false
+            }
+        }
+        
+        // Setup filter button
+        findViewById<ImageView>(R.id.filter_button).setOnClickListener {
+            // Show category selection dialog or filter options
+            val categories = arrayOf("All", "Buildings", "Food", "Services")
+            
+            AlertDialog.Builder(this)
+                .setTitle("Filter by Category")
+                .setItems(categories) { _, which ->
+                    val category = categories[which]
+                    if (category == "All") {
+                        viewModel.loadBuildings()
+                    } else {
+                        viewModel.loadBuildingsByCategory(category)
+                    }
+                }
+                .show()
         }
     }
 
