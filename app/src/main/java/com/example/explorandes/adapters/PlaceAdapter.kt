@@ -1,19 +1,17 @@
 package com.example.explorandes.adapters
 
 import android.content.Intent
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.explorandes.MapActivity
 import com.example.explorandes.R
 import com.example.explorandes.models.Place
+import com.example.explorandes.utils.GlideImageLoader
 
 class PlaceAdapter(
     private var places: List<Place>,
@@ -34,18 +32,14 @@ class PlaceAdapter(
 
     override fun onBindViewHolder(holder: PlaceViewHolder, position: Int) {
         val place = places[position]
+        val context = holder.itemView.context
+        
         holder.placeName.text = place.name
         holder.placeLocation.text = place.floor ?: ""
 
-        // Load image from URL
-        if (!place.imageUrl.isNullOrEmpty()) {
-            Glide.with(holder.itemView.context)
-                .load(place.imageUrl)
-                .placeholder(R.drawable.profile_placeholder)
-                .into(holder.placeImage)
-        } else {
-            holder.placeImage.setImageResource(R.drawable.profile_placeholder)
-        }
+        // Usar el imageLoader para cargar imágenes (con estrategia para miniaturas)
+        val imageLoader = GlideImageLoader(context)
+        imageLoader.loadThumbnail(place.imageUrl, holder.placeImage)
 
         // Configure item click
         holder.itemView.setOnClickListener {
@@ -59,7 +53,6 @@ class PlaceAdapter(
             
             // If we have a buildingId, start the MapActivity
             if (buildingId != null) {
-                val context = holder.itemView.context
                 val intent = Intent(context, MapActivity::class.java)
                 intent.putExtra("BUILDING_ID", buildingId)
                 context.startActivity(intent)

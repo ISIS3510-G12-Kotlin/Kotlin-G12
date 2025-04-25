@@ -6,10 +6,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.explorandes.R
 import com.example.explorandes.databinding.ItemEventBinding
 import com.example.explorandes.models.Event
+import com.example.explorandes.utils.GlideImageLoader
 
 class EventAdapter(
     private val onEventClick: (Event) -> Unit
@@ -86,17 +86,9 @@ class EventAdapter(
                     tvNowPlaying.visibility = View.GONE
                 }
 
-                // Load event image
-                event.imageUrl?.let { url ->
-                    Glide.with(ivEventImage.context)
-                        .load(url)
-                        .placeholder(R.drawable.placeholder_event)
-                        .error(R.drawable.placeholder_event)
-                        .centerCrop()
-                        .into(ivEventImage)
-                } ?: run {
-                    ivEventImage.setImageResource(R.drawable.placeholder_event)
-                }
+                // Load event image usando el cacheado
+                val imageLoader = GlideImageLoader(ivEventImage.context)
+                imageLoader.loadImage(event.imageUrl, ivEventImage, R.drawable.placeholder_event)
             }
         }
     }

@@ -7,9 +7,9 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.example.explorandes.R
 import com.example.explorandes.models.Building
+import com.example.explorandes.utils.GlideImageLoader
 
 class BuildingAdapter(
     private var buildings: List<Building>,
@@ -30,19 +30,14 @@ class BuildingAdapter(
 
     override fun onBindViewHolder(holder: BuildingViewHolder, position: Int) {
         val building = buildings[position]
-
+        val context = holder.itemView.context
+        
         holder.name.text = building.name
         holder.code.text = building.code
 
-        // Load image
-        if (!building.imageUrl.isNullOrEmpty()) {
-            Glide.with(holder.image.context)
-                .load(building.imageUrl)
-                .placeholder(R.drawable.profile_placeholder)
-                .into(holder.image)
-        } else {
-            holder.image.setImageResource(R.drawable.profile_placeholder)
-        }
+        // Usar el imageLoader para cargar imágenes con caché
+        val imageLoader = GlideImageLoader(context)
+        imageLoader.loadImage(building.imageUrl, holder.image)
 
         // Set click listener on the entire item
         holder.itemView.setOnClickListener {
