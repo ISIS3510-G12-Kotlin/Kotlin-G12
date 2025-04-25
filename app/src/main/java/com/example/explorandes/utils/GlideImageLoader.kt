@@ -12,15 +12,18 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.example.explorandes.R
 import com.example.explorandes.cache.ImageCacheManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Implementación para cargar imágenes usando Glide con soporte para caché.
  * Esta clase implementa la estrategia de memoria local para imágenes.
  */
 class GlideImageLoader(private val context: Context) {
-    
+
     private val imageCacheManager = ImageCacheManager.getInstance(context)
-    
+
     // Determina si hay conexión a Internet activa
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -28,7 +31,7 @@ class GlideImageLoader(private val context: Context) {
         val capabilities = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
-    
+
     /**
      * Carga una imagen desde la URL en un ImageView, con configuración para usar caché
      */
@@ -37,32 +40,31 @@ class GlideImageLoader(private val context: Context) {
             loadPlaceholder(imageView, placeholderId)
             return
         }
-        
+
         // Configurar opciones de Glide
         val requestOptions = RequestOptions()
             .placeholder(placeholderId)
             .error(placeholderId)
-            .diskCacheStrategy(DiskCacheStrategy.ALL) // Caché en disco para todas las versiones
-        
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+
         var glideRequest: RequestBuilder<Drawable> = Glide.with(context)
             .load(url)
             .apply(requestOptions)
             .transition(DrawableTransitionOptions.withCrossFade())
-        
-        // Determinar política de caché según la conectividad
+
+        // Si no hay red, solo recuperar de caché
         if (!isNetworkAvailable()) {
-            // Si no hay red, sólo usar caché
             glideRequest = glideRequest.onlyRetrieveFromCache(true)
-        } 
-        
+        }
+
         glideRequest.into(imageView)
-        
-        // Para imágenes pequeñas, pre-cargar en segundo plano para uso offline
+
+        // Pre-cargar si es imagen pequeña
         if (isSmallImage(url)) {
             preloadImage(url)
         }
     }
-    
+
     /**
      * Carga una imagen para miniaturas con estrategias para optimizar espacio
      */
@@ -71,49 +73,46 @@ class GlideImageLoader(private val context: Context) {
             loadPlaceholder(imageView, placeholderId)
             return
         }
-        
-        // Para miniaturas usamos caché en memoria para acceso rápido y eficiente
+
         val requestOptions = RequestOptions()
             .placeholder(placeholderId)
             .error(placeholderId)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .override(150, 150) 
+            .override(150, 150)
             .centerCrop()
-        
+
         Glide.with(context)
             .load(url)
             .apply(requestOptions)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(imageView)
     }
-    
+
     /**
-     * Precargar una imagen en caché para uso futuro sin conexión
+     * Precargar una imagen en caché para uso futuro sin conexión (corrutina)
      */
     private fun preloadImage(url: String) {
-        // Usar el ImageCacheManager para guardar la imagen en segundo plano
-        Thread {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 imageCacheManager.preloadImage(url)
             } catch (e: Exception) {
-                // No hacer nada, la precarga es opcional
+                // Ignorar errores de precarga
             }
-        }.start()
+        }
     }
-    
+
     /**
-     * Determina si una imagen es considerada pequeña basado en su URL
-     * 
+     * Determina si una imagen es considerada "pequeña" basado en su URL
      */
     private fun isSmallImage(url: String): Boolean {
         val lowerUrl = url.lowercase()
-        return lowerUrl.contains("thumbnail") || 
-               lowerUrl.contains("icon") || 
+        return lowerUrl.contains("thumbnail") ||
+               lowerUrl.contains("icon") ||
                lowerUrl.contains("small") ||
                lowerUrl.contains("avatar") ||
                lowerUrl.endsWith(".ico")
     }
-    
+
     /**
      * Carga un placeholder en el ImageView
      */
@@ -122,17 +121,16 @@ class GlideImageLoader(private val context: Context) {
             .load(placeholderId)
             .into(imageView)
     }
-    
+
     /**
-     * Limpia la caché de imágenes 
+     * Limpia la caché de imágenes (útil para liberar espacio)
      */
     fun clearCache() {
         Glide.get(context).clearMemory()
-        
-        // Limpiar caché de disco en un hilo secundario
-        Thread {
+
+        CoroutineScope(Dispatchers.IO).launch {
             Glide.get(context).clearDiskCache()
             imageCacheManager.clearCache()
-        }.start()
+        }
     }
 }
