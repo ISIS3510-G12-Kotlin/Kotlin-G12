@@ -1,8 +1,11 @@
 package com.example.explorandes.models
 
+import android.os.Parcelable
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class Place(
     @SerializedName("id") val id: Long = 0,
     @SerializedName("name") val name: String,
@@ -18,8 +21,7 @@ data class Place(
     // Exclude the full building from serialization/deserialization
     @Expose(serialize = false, deserialize = false)
     @SerializedName("building") val building: Building? = null
-) {
-    // Helper function with a different name to avoid conflicts
+) : Parcelable {
     fun getEffectiveBuildingId(): Long? {
         return buildingId ?: building?.id
     }

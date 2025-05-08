@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Top Header with Curved Background - Modified with clickable profile -->
+            <!-- Top Header with Curved Background -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -38,7 +38,6 @@
                     android:layout_height="160dp"
                     android:background="@drawable/header_background" />
 
-                <!-- Centered Profile Section -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -46,7 +45,6 @@
                     android:gravity="center"
                     android:padding="16dp">
 
-                    <!-- Clickable profile image -->
                     <de.hdodenhof.circleimageview.CircleImageView
                         android:id="@+id/profile_image"
                         android:layout_width="64dp"
@@ -64,7 +62,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Hi, Juan"
+                        android:text="Hola, Usuario"
                         android:textColor="@android:color/white"
                         android:textSize="24sp"
                         android:textStyle="bold" />
@@ -86,40 +84,12 @@
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp">
 
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_all"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp" />
-
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_buildings"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp" />
-
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_events"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp" />
-
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_food"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp" />
-
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_study"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp" />
-
-                    <include layout="@layout/item_category"
-                        android:id="@+id/category_services"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                    <include layout="@layout/item_category" android:id="@+id/category_all"/>
+                    <include layout="@layout/item_category" android:id="@+id/category_buildings"/>
+                    <include layout="@layout/item_category" android:id="@+id/category_events"/>
+                    <include layout="@layout/item_category" android:id="@+id/category_food"/>
+                    <include layout="@layout/item_category" android:id="@+id/category_study"/>
+                    <include layout="@layout/item_category" android:id="@+id/category_services"/>
                 </LinearLayout>
             </HorizontalScrollView>
 
@@ -180,27 +150,19 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="8dp"
+                    android:gravity="start|center_vertical"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="Eventos"
                         android:textSize="18sp"
                         android:textColor="@android:color/black"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/see_all_events"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="See all"
-                        android:textColor="@color/colorPrimary"
-                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -214,8 +176,41 @@
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     tools:listitem="@layout/item_event" />
             </LinearLayout>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- View que se muestra cuando no hay conexión -->
+    <LinearLayout
+        android:id="@+id/no_connection_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        android:background="@color/background_light_gray">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@android:drawable/stat_notify_error"
+            android:contentDescription="No connection" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No internet connection"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Check your connection and try again"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -226,4 +221,5 @@
         android:background="@android:color/white"
         app:menu="@menu/bottom_navigation_menu"
         app:labelVisibilityMode="labeled" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -43,6 +43,7 @@ class BuildingAdapter(
         holder.itemView.setOnClickListener {
             onBuildingClicked(building)
         }
+        //Comment 1
     }
 
     override fun getItemCount() = buildings.size

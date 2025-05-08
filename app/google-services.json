@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "174663158922",
+    "project_id": "moviles-explorandes",
+    "storage_bucket": "moviles-explorandes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174663158922:android:26cac794978617bd857173",
+        "android_client_info": {
+          "package_name": "com.example.explorandes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5RLxAVR-mykLMjfWpUKS6L4z22u1P5Q4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
