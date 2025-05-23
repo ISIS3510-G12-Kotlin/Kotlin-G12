@@ -94,7 +94,6 @@ class EventAdapter(
                     cardEvent.strokeWidth = 0
                     tvNowPlaying.visibility = View.GONE
                 }
-
                 val imageUrl = event.imageUrl
                 if (!imageUrl.isNullOrEmpty()) {
                     Glide.with(ivEventImage.context)
@@ -108,7 +107,9 @@ class EventAdapter(
                         )
                         .into(ivEventImage)
                 } else {
+
                     ivEventImage.setImageResource(R.drawable.placeholder_event)
+
                 }
             }
         }
