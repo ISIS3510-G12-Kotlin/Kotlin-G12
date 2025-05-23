@@ -22,8 +22,11 @@ class BuildingAdapter(
 
     class BuildingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val image: ImageView = view.findViewById(R.id.building_image)
+
         val name: TextView = view.findViewById(R.id.building_name)
+
         val code: TextView = view.findViewById(R.id.building_code)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BuildingViewHolder {
