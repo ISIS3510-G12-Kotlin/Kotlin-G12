@@ -27,7 +27,8 @@ import com.example.explorandes.viewmodels.HomeViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.bumptech.glide.Glide
 import com.example.explorandes.utils.UserDataCache
-
+import com.example.explorandes.fragments.FavoritesFragment
+import com.example.explorandes.fragments.SearchFragment
 
 class HomeActivity : BaseActivity() {
 
@@ -41,7 +42,7 @@ class HomeActivity : BaseActivity() {
     private lateinit var buildingAdapter: BuildingAdapter
     private lateinit var eventAdapter: EventAdapter
     private lateinit var app: ExplorAndesApplication
-    
+
     // Connectivity tracking fields
     private var wasOfflineBefore = false
 
@@ -69,7 +70,7 @@ class HomeActivity : BaseActivity() {
             this,
             HomeViewModel.Factory(this)
         )[HomeViewModel::class.java]
-        
+
         // Check initial connectivity
         wasOfflineBefore = !hasInternetConnection()
         if (wasOfflineBefore) {
@@ -79,7 +80,7 @@ class HomeActivity : BaseActivity() {
         setupViewModelObservers()
         viewModel.loadUserData(sessionManager)
         initializeUI()
-        
+
         // Agregar botón para reintentar conexión
         noConnectionView.findViewById<View>(R.id.retry_button)?.setOnClickListener {
             if (hasInternetConnection()) {
@@ -89,7 +90,7 @@ class HomeActivity : BaseActivity() {
                 Toast.makeText(this, "Still no internet connection", Toast.LENGTH_SHORT).show()
             }
         }
-        
+
         // Observe the connectivity status from ViewModel
         viewModel.isConnected.observe(this) { isConnected ->
             if (isConnected) {
@@ -100,7 +101,7 @@ class HomeActivity : BaseActivity() {
                         "Internet connection restored",
                         Snackbar.LENGTH_SHORT
                     ).show()
-                    
+
                     // Refresh data
                     refreshData()
                     hideNoConnection()
@@ -108,7 +109,7 @@ class HomeActivity : BaseActivity() {
                 wasOfflineBefore = false
             } else {
                 wasOfflineBefore = true
-                
+
                 // If we have content already loaded, show a snackbar
                 // Otherwise, show the full offline view
                 if (viewModel.buildings.value.isNullOrEmpty() && viewModel.events.value.isNullOrEmpty()) {
@@ -126,7 +127,7 @@ class HomeActivity : BaseActivity() {
             }
         }
     }
-    
+
     private fun refreshData() {
         viewModel.loadBuildings()
         viewModel.loadEvents()
@@ -137,7 +138,7 @@ class HomeActivity : BaseActivity() {
         nestedScrollView.visibility = View.GONE
         fragmentContainer.visibility = View.GONE
     }
-    
+
     private fun hideNoConnection() {
         noConnectionView.visibility = View.GONE
         // Muestra el contenido que estaba visible anteriormente
@@ -159,15 +160,15 @@ class HomeActivity : BaseActivity() {
         viewModel.user.observe(this) { user ->
             // Save all user info to SessionManager
             sessionManager.saveUserInfo(user.id, user.email, user.username)
-            
+
             // Update UI with fresh user data
             val greetingText: TextView = findViewById(R.id.greeting_text)
             greetingText.text = "Hola, ${user.username}"
-            
+
             // Save profile image URL if available
             user.profileImageUrl?.let { imageUrl ->
                 sessionManager.saveProfilePictureUrl(imageUrl)
-                
+
                 // Update profile image
                 val profileImage: ImageView? = findViewById(R.id.profile_image)
                 profileImage?.let { imageView ->
@@ -179,7 +180,7 @@ class HomeActivity : BaseActivity() {
                         .into(imageView)
                 }
             }
-            
+
             android.util.Log.d("HomeActivity", "User data updated: ${user.username}")
         }
 
@@ -218,14 +219,14 @@ class HomeActivity : BaseActivity() {
             Log.d("HomeActivity", "Events LiveData updated: received ${events?.size ?: 0} events")
             eventAdapter.submitList(events)
         }
-        
+
         viewModel.isLoading.observe(this) { isLoading ->
             // If loading and we have no data yet, show loading indicator
             if (isLoading && viewModel.buildings.value?.isEmpty() == true) {
                 // You could add a loading indicator here if needed
             }
         }
-        
+
         // Observe connectivity status
         viewModel.isConnected.observe(this) { isConnected ->
             if (isConnected) {
@@ -236,7 +237,7 @@ class HomeActivity : BaseActivity() {
                         "Internet connection restored",
                         Snackbar.LENGTH_SHORT
                     ).show()
-                    
+
                     // Refresh data
                     refreshData()
                     hideNoConnection()
@@ -244,7 +245,7 @@ class HomeActivity : BaseActivity() {
                 wasOfflineBefore = false
             } else {
                 wasOfflineBefore = true
-                
+
                 // If we have content already loaded, show a snackbar
                 // Otherwise, show the full offline view
                 if (viewModel.buildings.value.isNullOrEmpty() && viewModel.events.value.isNullOrEmpty()) {
@@ -266,10 +267,10 @@ class HomeActivity : BaseActivity() {
     private fun initializeUI() {
         val userName = sessionManager.getCachedUserName()
         findViewById<TextView>(R.id.greeting_text).text = "Hola, $userName"
-        
+
         val profileImageView = findViewById<ImageView>(R.id.profile_image)
         val profileImageUrl = sessionManager.getCachedProfilePicUrl()
-        
+
         if (profileImageUrl != null && profileImageUrl.isNotEmpty()) {
             com.bumptech.glide.Glide.with(this)
                 .load(profileImageUrl)
@@ -278,7 +279,7 @@ class HomeActivity : BaseActivity() {
                 .circleCrop()
                 .into(profileImageView)
         }
-        
+
         setupCategoryIcons()
         setupRecyclerViews()
         setupBottomNavigation()
@@ -287,7 +288,7 @@ class HomeActivity : BaseActivity() {
         loadUserDataIfConnected()
         viewModel.loadBuildings()
         viewModel.loadEvents()
-        
+
         if (intent.getBooleanExtra("OPEN_NAVIGATION", false)) {
             findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
                 .selectedItemId = R.id.navigation_navigate
@@ -311,20 +312,28 @@ class HomeActivity : BaseActivity() {
         categoryAll.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_home)
         categoryAll.findViewById<TextView>(R.id.category_name).text = getString(R.string.all)
 
-        categoryBuildings.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_building)
-        categoryBuildings.findViewById<TextView>(R.id.category_name).text = getString(R.string.buildings)
+        categoryBuildings.findViewById<ImageView>(R.id.category_icon)
+            .setImageResource(R.drawable.ic_building)
+        categoryBuildings.findViewById<TextView>(R.id.category_name).text =
+            getString(R.string.buildings)
 
-        categoryEvents.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_event)
+        categoryEvents.findViewById<ImageView>(R.id.category_icon)
+            .setImageResource(R.drawable.ic_event)
         categoryEvents.findViewById<TextView>(R.id.category_name).text = getString(R.string.events)
 
-        categoryFood.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_food)
+        categoryFood.findViewById<ImageView>(R.id.category_icon)
+            .setImageResource(R.drawable.ic_food)
         categoryFood.findViewById<TextView>(R.id.category_name).text = getString(R.string.food_rest)
 
-        categoryStudy.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_study)
-        categoryStudy.findViewById<TextView>(R.id.category_name).text = getString(R.string.study_spaces)
+        categoryStudy.findViewById<ImageView>(R.id.category_icon)
+            .setImageResource(R.drawable.ic_study)
+        categoryStudy.findViewById<TextView>(R.id.category_name).text =
+            getString(R.string.study_spaces)
 
-        categoryServices.findViewById<ImageView>(R.id.category_icon).setImageResource(R.drawable.ic_services)
-        categoryServices.findViewById<TextView>(R.id.category_name).text = getString(R.string.services)
+        categoryServices.findViewById<ImageView>(R.id.category_icon)
+            .setImageResource(R.drawable.ic_services)
+        categoryServices.findViewById<TextView>(R.id.category_name).text =
+            getString(R.string.services)
 
         categoryEvents.visibility = View.GONE
         categoryStudy.visibility = View.GONE
@@ -337,7 +346,8 @@ class HomeActivity : BaseActivity() {
 
     private fun setupRecyclerViews() {
         buildingsRecyclerView = findViewById(R.id.buildings_recycler)
-        buildingsRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        buildingsRecyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         buildingAdapter = BuildingAdapter(emptyList()) { building ->
             val intent = Intent(this, BuildingDetailActivity::class.java)
             intent.putExtra("BUILDING", building)
@@ -345,109 +355,131 @@ class HomeActivity : BaseActivity() {
         }
         buildingsRecyclerView.adapter = buildingAdapter
 
+        // Configuración mejorada del RecyclerView de eventos
         eventsRecyclerView = findViewById(R.id.events_recycler)
-        eventsRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        eventsRecyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        
+        // Verificación de que el RecyclerView existe
+        Log.d("HomeActivity", "Events RecyclerView initialized: ${eventsRecyclerView != null}")
+        
         eventAdapter = EventAdapter { event ->
             val intent = Intent(this, EventDetailActivity::class.java)
             intent.putExtra("EVENT", event)
             startActivity(intent)
         }
+        
+        // Verificación de que el adaptador se crea correctamente
+        Log.d("HomeActivity", "EventAdapter created successfully")
+        
         eventsRecyclerView.adapter = eventAdapter
+        Log.d("HomeActivity", "EventAdapter set to RecyclerView")
     }
 
     private fun setupBottomNavigation() {
-        val bottomNavigation = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
+        val bottomNavigation =
+            findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottom_navigation)
         bottomNavigation.selectedItemId = R.id.navigation_home
 
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.navigation_home -> { showHomeContent(); true }
-                R.id.navigation_favorites -> { Toast.makeText(this, getString(R.string.favorites), Toast.LENGTH_SHORT).show(); true }
-                R.id.navigation_navigate -> { startActivity(Intent(this, MapActivity::class.java)); true }
-                R.id.navigation_view -> { 
-                    // Show events list when clicking "View"
-                    nestedScrollView.visibility = View.GONE
-                    fragmentContainer.visibility = View.VISIBLE
-                    
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, EventListFragment.newInstance())
-                        .addToBackStack(null)
-                        .commit()
+                R.id.navigation_home -> {
+                    showHomeContent(); true
+                }
+
+                R.id.navigation_favorites -> {
+                    // En lugar de solo mostrar un Toast, cargamos el fragmento de favoritos
+                    loadFragment(FavoritesFragment.newInstance())
                     true
                 }
-                R.id.navigation_account -> { loadFragment(com.example.explorandes.ui.account.AccountFragment()); true }
+
+                R.id.navigation_navigate -> {
+                    startActivity(Intent(this, MapActivity::class.java)); true
+                }
+
+                R.id.navigation_search -> {
+                    // Añadir opción para el fragmento de búsqueda avanzada
+                    loadFragment(SearchFragment.newInstance())
+                    true
+                }
+
+                R.id.navigation_account -> {
+                    loadFragment(com.example.explorandes.ui.account.AccountFragment()); true
+                }
+
                 else -> false
             }
         }
     }
 
-    private fun setupClickListeners() {
-        findViewById<TextView>(R.id.see_all_buildings).setOnClickListener {
+        private fun setupClickListeners() {
+            findViewById<TextView>(R.id.see_all_buildings).setOnClickListener {
+                nestedScrollView.visibility = View.GONE
+                fragmentContainer.visibility = View.VISIBLE
+
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, BuildingsListFragment.newInstance())
+                    .addToBackStack(null)
+                    .commit()
+            }
+
+
+        }
+
+        private fun showHomeContent() {
+            supportFragmentManager.findFragmentById(R.id.fragment_container)?.let {
+                supportFragmentManager.beginTransaction().remove(it).commit()
+            }
+            nestedScrollView.visibility = View.VISIBLE
+            fragmentContainer.visibility = View.GONE
+            noConnectionView.visibility = View.GONE
+        }
+
+        private fun loadFragment(fragment: Fragment) {
             nestedScrollView.visibility = View.GONE
             fragmentContainer.visibility = View.VISIBLE
-    
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, BuildingsListFragment.newInstance())
-                .addToBackStack(null)
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment)
                 .commit()
         }
 
-
-    }
-
-    private fun showHomeContent() {
-        supportFragmentManager.findFragmentById(R.id.fragment_container)?.let {
-            supportFragmentManager.beginTransaction().remove(it).commit()
+        private fun navigateToLogin() {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
-        nestedScrollView.visibility = View.VISIBLE
-        fragmentContainer.visibility = View.GONE
-        noConnectionView.visibility = View.GONE
-    }
 
-    private fun loadFragment(fragment: Fragment) {
-        nestedScrollView.visibility = View.GONE
-        fragmentContainer.visibility = View.VISIBLE
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, fragment).commit()
-    }
+        // Override onResume to check connectivity
+        override fun onResume() {
+            super.onResume()
+            // Check connectivity when activity returns to foreground
+            viewModel.checkConnectivity()
 
-    private fun navigateToLogin() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
-    
-    // Override onResume to check connectivity
-    override fun onResume() {
-        super.onResume()
-        // Check connectivity when activity returns to foreground
-        viewModel.checkConnectivity()
-        
-        // If we were offline but now have connection, refresh data and update UI
-        if (wasOfflineBefore && hasInternetConnection()) {
-            hideNoConnection()
-            refreshData()
-            wasOfflineBefore = false
-            
-            Snackbar.make(
-                findViewById(android.R.id.content),
-                "Internet connection restored",
-                Snackbar.LENGTH_SHORT
-            ).show()
-        }
-    }
-    
-    // Handle back button press for fragments
-    override fun onBackPressed() {
-        if (fragmentContainer.visibility == View.VISIBLE) {
-            if (supportFragmentManager.backStackEntryCount > 0) {
-                supportFragmentManager.popBackStack()
-            } else {
-                // Show home content if there are no more fragments in back stack
-                showHomeContent()
+            // If we were offline but now have connection, refresh data and update UI
+            if (wasOfflineBefore && hasInternetConnection()) {
+                hideNoConnection()
+                refreshData()
+                wasOfflineBefore = false
+
+                Snackbar.make(
+                    findViewById(android.R.id.content),
+                    "Internet connection restored",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
-        } else {
-            super.onBackPressed()
+        }
+
+        // Handle back button press for fragments
+        override fun onBackPressed() {
+            if (fragmentContainer.visibility == View.VISIBLE) {
+                if (supportFragmentManager.backStackEntryCount > 0) {
+                    supportFragmentManager.popBackStack()
+                } else {
+                    // Show home content if there are no more fragments in back stack
+                    showHomeContent()
+                }
+            } else {
+                super.onBackPressed()
+            }
         }
     }
-}

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_eventListFragment_to_eventDetailFragment"
             app:destination="@id/eventDetailFragment" />
+        <action
+            android:id="@+id/action_eventListFragment_to_visitedFragment"
+            app:destination="@id/visitedFragment" />
     </fragment>
 
     <fragment
@@ -34,4 +37,11 @@
             android:name="buildingId"
             app:argType="long" />
     </fragment>
+
+    <fragment
+        android:id="@+id/visitedFragment"
+        android:name="com.example.explorandes.fragments.VisitedFragment"
+        android:label="Historial"
+        tools:layout="@layout/fragment_visited" />
+
 </navigation>

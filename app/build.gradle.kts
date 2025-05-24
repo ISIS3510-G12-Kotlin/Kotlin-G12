@@ -81,6 +81,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.44")
     kapt("com.google.dagger:hilt-android-compiler:2.44")
     implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
+
 
     // Glide for image loading
     implementation("com.github.bumptech.glide:glide:4.15.1")

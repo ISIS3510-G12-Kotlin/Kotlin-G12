@@ -21,9 +21,10 @@ import com.bumptech.glide.Glide
 import com.google.android.material.snackbar.Snackbar
 import com.example.explorandes.utils.ConnectivityHelper
 import android.util.Log
+import com.example.explorandes.fragments.VisitedFragment
 
 class AccountFragment : Fragment() {
-    
+
     private lateinit var profileImage: ImageView
     private lateinit var userName: TextView
     private lateinit var userRole: TextView
@@ -32,11 +33,12 @@ class AccountFragment : Fragment() {
     private lateinit var notificationsOption: LinearLayout
     private lateinit var signOutOption: LinearLayout
     private lateinit var loadingView: View
-    
+    private lateinit var historyOption: LinearLayout
+
     private lateinit var sessionManager: SessionManager
     private var currentUser: User? = null
     private var rootView: View? = null
-    
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,11 +46,9 @@ class AccountFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_account, container, false)
         rootView = view
-        
-        // Initialize SessionManager
+
         sessionManager = SessionManager(requireContext())
-        
-        // Initialize views
+
         profileImage = view.findViewById(R.id.profileImage)
         userName = view.findViewById(R.id.userName)
         userRole = view.findViewById(R.id.userRole)
@@ -57,38 +57,29 @@ class AccountFragment : Fragment() {
         notificationsOption = view.findViewById(R.id.notificationsOption)
         signOutOption = view.findViewById(R.id.signOutOption)
         loadingView = view.findViewById(R.id.loadingView)
-        
-        // Set up click listeners
+        historyOption = view.findViewById(R.id.historyOption)
+
         setupClickListeners()
-        
-        // Load user data after views are initialized
         loadUserData()
-        
+
         return view
     }
-    
+
     private fun loadUserData() {
         showLoading(true)
-        
-        // First, try to load from cache (SessionManager)
+
         val userId = sessionManager.getUserId()
-        
         if (userId <= 0) {
-            // No cached user data, redirect to login
             Toast.makeText(requireContext(), "No se encontró información de usuario", Toast.LENGTH_SHORT).show()
             navigateToLogin()
             return
         }
-        
-        // Show cached data immediately
+
         val cachedUserName = sessionManager.getCachedUserName()
         val cachedEmail = sessionManager.getEmail() ?: ""
-        
-        // Update UI with cached data
         userName.text = cachedUserName
-        userRole.text = "Estudiante" // Default value
-        
-        // Load cached profile picture if available
+        userRole.text = "Estudiante"
+
         val cachedProfilePicUrl = sessionManager.getCachedProfilePicUrl()
         if (!cachedProfilePicUrl.isNullOrEmpty()) {
             Glide.with(requireContext())
@@ -100,35 +91,26 @@ class AccountFragment : Fragment() {
         } else {
             profileImage.setImageResource(R.drawable.profile_placeholder)
         }
-        
-        // Hide loading once cached data is shown
+
         showLoading(false)
-        
-        // Then try to get fresh data from API if online
+
         if (ConnectivityHelper(requireContext()).isInternetAvailable()) {
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     val response = ApiClient.apiService.getUserById(userId)
-                    
                     if (response.isSuccessful && response.body() != null) {
                         currentUser = response.body()
                         updateUI()
-                    } else {
-                        // API error but we already have cached data shown
-                        if (response.code() == 401) {
-                            // Token invalid or expired
-                            sessionManager.logout()
-                            navigateToLogin()
-                        }
+                    } else if (response.code() == 401) {
+                        sessionManager.logout()
+                        navigateToLogin()
                     }
                 } catch (e: Exception) {
-                    // Network error, but we already have cached data shown
                     Log.e("AccountFragment", "Error de conexión: ${e.message}")
                 }
             }
         } else {
-            // Offline - we've already shown cached data
-            if (isAdded && view != null) {  // Check if fragment is still attached
+            if (isAdded && view != null) {
                 Snackbar.make(
                     requireView(),
                     "Sin conexión. Mostrando datos almacenados localmente.",
@@ -137,12 +119,10 @@ class AccountFragment : Fragment() {
             }
         }
     }
-    
+
     private fun updateUI() {
-        if (!isAdded || view == null) return  // Check if fragment is still attached
-        
+        if (!isAdded || view == null) return
         currentUser?.let { user ->
-            // Construir nombre completo
             val displayName = if (!user.firstName.isNullOrEmpty() || !user.lastName.isNullOrEmpty()) {
                 val firstName = user.firstName ?: ""
                 val lastName = user.lastName ?: ""
@@ -150,11 +130,9 @@ class AccountFragment : Fragment() {
             } else {
                 user.username
             }
-            
             userName.text = displayName
-            userRole.text = "Estudiante" // Valor por defecto
-            
-            // Cargar imagen de perfil si existe
+            userRole.text = "Estudiante"
+
             if (!user.profileImageUrl.isNullOrEmpty()) {
                 Glide.with(requireContext())
                     .load(user.profileImageUrl)
@@ -163,30 +141,25 @@ class AccountFragment : Fragment() {
                     .error(R.drawable.profile_placeholder)
                     .into(profileImage)
             } else {
-                // Si no hay imagen de perfil, usar imagen predeterminada
                 profileImage.setImageResource(R.drawable.profile_placeholder)
             }
         }
     }
-    
+
     private fun setupClickListeners() {
-        editProfileOption.setOnClickListener {
-            navigateToEditProfile()
-        }
-        
-        languageOption.setOnClickListener {
-            navigateToLanguageSettings()
-        }
-        
-        notificationsOption.setOnClickListener {
-            navigateToNotificationSettings()
-        }
-        
-        signOutOption.setOnClickListener {
-            signOut()
+        editProfileOption.setOnClickListener { navigateToEditProfile() }
+        languageOption.setOnClickListener { navigateToLanguageSettings() }
+        notificationsOption.setOnClickListener { navigateToNotificationSettings() }
+        signOutOption.setOnClickListener { signOut() }
+
+        historyOption.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, VisitedFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
-    
+
     private fun navigateToEditProfile() {
         currentUser?.let { user ->
             val fragment = EditProfileFragment()
@@ -197,7 +170,7 @@ class AccountFragment : Fragment() {
                 .commit()
         } ?: Toast.makeText(requireContext(), "Información de usuario no disponible", Toast.LENGTH_SHORT).show()
     }
-    
+
     private fun navigateToLanguageSettings() {
         val fragment = LanguageFragment()
         parentFragmentManager.beginTransaction()
@@ -205,7 +178,7 @@ class AccountFragment : Fragment() {
             .addToBackStack(null)
             .commit()
     }
-    
+
     private fun navigateToNotificationSettings() {
         val fragment = NotificationsFragment()
         parentFragmentManager.beginTransaction()
@@ -213,22 +186,19 @@ class AccountFragment : Fragment() {
             .addToBackStack(null)
             .commit()
     }
-    
+
     private fun signOut() {
-        // Clear session
         sessionManager.logout()
-        
-        // Navigate to login screen
         navigateToLogin()
     }
-    
+
     private fun navigateToLogin() {
         val intent = Intent(requireContext(), MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         requireActivity().finish()
     }
-    
+
     private fun showLoading(isLoading: Boolean) {
         if (::loadingView.isInitialized) {
             loadingView.visibility = if (isLoading) View.VISIBLE else View.GONE

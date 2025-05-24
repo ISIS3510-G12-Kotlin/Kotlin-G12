@@ -28,6 +28,17 @@
             app:iconifiedByDefault="false"
             app:queryHint="Search events..." />
 
+        <!-- Botón totalmente visible justo debajo del buscador -->
+        <Button
+            android:id="@+id/btnOpenVisited"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ver historial"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="@color/purple_500"
+            android:textColor="@android:color/white" />
+
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

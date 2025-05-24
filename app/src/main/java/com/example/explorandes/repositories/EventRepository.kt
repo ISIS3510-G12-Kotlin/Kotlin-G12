@@ -1,6 +1,7 @@
 package com.example.explorandes.repositories
 
 import android.content.Context
+import android.util.Log
 import com.example.explorandes.api.ApiService
 import com.example.explorandes.database.AppDatabase
 import com.example.explorandes.database.entity.EventEntity
@@ -12,14 +13,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
-import java.io.IOException
 
 class EventRepository(private val apiService: ApiService, private val context: Context? = null) {
 
-    // Local database DAO
     private val eventDao = context?.let { AppDatabase.getInstance(it).eventDao() }
     private val connectivityHelper = context?.let { ConnectivityHelper(it) }
 
@@ -28,7 +26,6 @@ class EventRepository(private val apiService: ApiService, private val context: C
     }
 
     companion object {
-        // Singleton pattern implementation
         @Volatile
         private var instance: EventRepository? = null
 
@@ -40,8 +37,7 @@ class EventRepository(private val apiService: ApiService, private val context: C
                 ).also { instance = it }
             }
         }
-        
-        // Add a new getInstance method that accepts ApiService directly
+
         fun getInstance(apiService: ApiService, context: Context): EventRepository {
             return instance ?: synchronized(this) {
                 instance ?: EventRepository(apiService, context).also { instance = it }
@@ -51,41 +47,40 @@ class EventRepository(private val apiService: ApiService, private val context: C
 
     fun getAllEvents(): Flow<NetworkResult<List<Event>>> = flow {
         emit(NetworkResult.Loading())
-    
+
         try {
-            // Try API first if internet is available
             if (connectivityHelper?.isInternetAvailable() == true) {
                 try {
                     val response = apiService.getAllEvents()
-    
+
                     if (response.isSuccessful) {
                         val events = response.body() ?: emptyList()
-                        
-                        // Save to cache if database is available
+                        Log.d("EventRepository", "✅ Eventos recibidos desde API: ${events.size}")
+
                         eventDao?.let { dao ->
                             withContext(Dispatchers.IO) {
                                 val eventEntities = events.map { EventEntity.fromModel(it) }
                                 dao.insertEvents(eventEntities)
                             }
                         }
-                        
+
                         emit(NetworkResult.Success(events))
                     } else {
-                        // API error - try cache
+                        Log.w("EventRepository", "❌ Fallo API: ${response.code()}")
                         loadFromCache(
                             emit = { result -> emit(result) },
                             errorMessage = "API error: ${response.code()}"
                         )
                     }
                 } catch (e: Exception) {
-                    // Network error - try cache
+                    Log.e("EventRepository", "🌐 Error red API: ${e.message}")
                     loadFromCache(
                         emit = { result -> emit(result) },
                         errorMessage = "Network error: ${e.message}"
                     )
                 }
             } else {
-                // No internet - try cache
+                Log.w("EventRepository", "⚠️ Sin conexión - intentando cache")
                 loadFromCache(
                     emit = { result -> emit(result) },
                     errorMessage = "No internet connection"
@@ -95,17 +90,17 @@ class EventRepository(private val apiService: ApiService, private val context: C
             emit(NetworkResult.Error("Error fetching events: ${e.message}"))
         }
     }.flowOn(Dispatchers.IO)
-    
+
     private suspend fun loadFromCache(
-    emit: suspend (NetworkResult<List<Event>>) -> Unit,
-    errorMessage: String? = null
+        emit: suspend (NetworkResult<List<Event>>) -> Unit,
+        errorMessage: String? = null
     ) {
-        // Only try cache if we have a database
         if (eventDao != null) {
             try {
                 val cachedEvents = eventDao.getAllEvents().first()
                 val events = cachedEvents.map { it.toModel() }
-                
+                Log.d("EventRepository", "📦 Eventos desde cache: ${events.size}")
+
                 if (events.isNotEmpty()) {
                     emit(NetworkResult.Success(events))
                 } else {
@@ -121,34 +116,26 @@ class EventRepository(private val apiService: ApiService, private val context: C
 
     fun getEventById(id: Long): Flow<NetworkResult<Event>> = flow {
         emit(NetworkResult.Loading())
-    
+
         try {
-            // Try API first if internet is available
             if (connectivityHelper?.isInternetAvailable() == true) {
                 try {
                     val response = apiService.getEventById(id)
-    
+
                     if (response.isSuccessful) {
                         val event = response.body()
-    
+
                         if (event != null) {
-                            // Save to cache if database is available
                             eventDao?.let { dao ->
                                 withContext(Dispatchers.IO) {
                                     dao.insertEvent(EventEntity.fromModel(event))
                                 }
                             }
-                            
                             emit(NetworkResult.Success(event))
                         } else {
-                            // Not found in API - try cache
-                            loadEventByIdFromCache(
-                                id,
-                                emit = { result -> emit(result) }
-                            )
+                            loadEventByIdFromCache(id, emit = { result -> emit(result) })
                         }
                     } else {
-                        // API error - try cache
                         loadEventByIdFromCache(
                             id,
                             emit = { result -> emit(result) },
@@ -156,7 +143,6 @@ class EventRepository(private val apiService: ApiService, private val context: C
                         )
                     }
                 } catch (e: Exception) {
-                    // Network error - try cache
                     loadEventByIdFromCache(
                         id,
                         emit = { result -> emit(result) },
@@ -164,7 +150,6 @@ class EventRepository(private val apiService: ApiService, private val context: C
                     )
                 }
             } else {
-                // No internet - try cache
                 loadEventByIdFromCache(
                     id,
                     emit = { result -> emit(result) },
@@ -175,17 +160,16 @@ class EventRepository(private val apiService: ApiService, private val context: C
             emit(NetworkResult.Error("Error fetching event: ${e.message}"))
         }
     }.flowOn(Dispatchers.IO)
-    
+
     private suspend fun loadEventByIdFromCache(
-    id: Long,
-    emit: suspend (NetworkResult<Event>) -> Unit,
-    errorMessage: String? = null
+        id: Long,
+        emit: suspend (NetworkResult<Event>) -> Unit,
+        errorMessage: String? = null
     ) {
-        // Only try cache if we have a database
         if (eventDao != null) {
             try {
                 val cachedEvent = eventDao.getEventById(id)
-                
+
                 if (cachedEvent != null) {
                     emit(NetworkResult.Success(cachedEvent.toModel()))
                 } else {
@@ -198,6 +182,4 @@ class EventRepository(private val apiService: ApiService, private val context: C
             emit(NetworkResult.Error(errorMessage ?: "Cache not available"))
         }
     }
-
-
 }

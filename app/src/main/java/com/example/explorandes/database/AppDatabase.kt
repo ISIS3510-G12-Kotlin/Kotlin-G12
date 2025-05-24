@@ -5,21 +5,20 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.explorandes.database.dao.BuildingDao
-import com.example.explorandes.database.dao.EventDao
-import com.example.explorandes.database.dao.PlaceDao
-import com.example.explorandes.database.entity.BuildingEntity
-import com.example.explorandes.database.entity.EventEntity
-import com.example.explorandes.database.entity.PlaceEntity
+import com.example.explorandes.database.dao.*
+import com.example.explorandes.database.entity.*
+import com.example.explorandes.models.VisitedItem
 import com.example.explorandes.database.typeconverters.DateConverter
 
 @Database(
     entities = [
         BuildingEntity::class,
         PlaceEntity::class,
-        EventEntity::class
+        EventEntity::class,
+        EventDetailEntity::class,
+        VisitedItem::class // ✅ Se incluye el historial de eventos visitados
     ],
-    version = 1,
+    version = 3, // ✅ Asegúrate de que esto sea mayor al valor anterior si hubo cambios
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -28,12 +27,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun buildingDao(): BuildingDao
     abstract fun placeDao(): PlaceDao
     abstract fun eventDao(): EventDao
+    abstract fun eventDetailDao(): EventDetailDao
+    abstract fun visitedDao(): VisitedDao // ✅ Dao del historial
 
     companion object {
-        private const val DATABASE_NAME = "explorandes_db"
-
         @Volatile
         private var INSTANCE: AppDatabase? = null
+        private const val DATABASE_NAME = "explorandes_db"
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -42,8 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                .fallbackToDestructiveMigration()
-                .build()
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

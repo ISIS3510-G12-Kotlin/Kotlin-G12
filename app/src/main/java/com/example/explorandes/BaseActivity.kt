@@ -96,7 +96,7 @@ abstract class BaseActivity : AppCompatActivity() {
             else -> 0.25f       // Outdoor/sunlight, dimmest screen
         }
         
-        Log.d("BaseActivity", "Setting brightness to $brightness based on lux $lux")
+        //Log.d("BaseActivity", "Setting brightness to $brightness based on lux $lux")
         BrightnessController.setBrightness(this, brightness)
     }
 }

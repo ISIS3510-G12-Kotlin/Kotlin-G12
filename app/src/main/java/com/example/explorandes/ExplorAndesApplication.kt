@@ -9,6 +9,7 @@ import com.example.explorandes.utils.ConnectivityHelper
 import com.example.explorandes.utils.DataStoreManager
 import com.example.explorandes.utils.FileStorage
 import com.example.explorandes.utils.SessionManager
+import com.example.explorandes.utils.SyncWorker
 import java.io.File
 
 
@@ -41,6 +42,21 @@ class ExplorAndesApplication : Application() {
         }
         
         Log.d("ExplorAndesApp", "Auto brightness enabled: $autoBrightnessEnabled")
+        val constraints = androidx.work.Constraints.Builder()
+        .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+        .build()
+
+        val syncRequest = androidx.work.PeriodicWorkRequestBuilder<SyncWorker>(
+            15, java.util.concurrent.TimeUnit.MINUTES
+        )
+            .setConstraints(constraints)
+            .build()
+
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "event_sync_work",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            syncRequest
+        )
     }
     
     fun saveAutoBrightnessPreference(enabled: Boolean) {
